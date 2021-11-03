@@ -4,6 +4,7 @@ from colorama import init, Fore, Back
 import threading
 from sniffer import sniff
 from poisoner import *
+import pickle
 
 init()
 
@@ -55,10 +56,28 @@ def main():
     arp_thread = threading.Thread(target=arp_poison, args=(target, gateway,))
     arp_thread.start()
 
-    packets = sniff(target['IP'], [6])
+    protocol_choices = [inquirer.Checkbox('protocols', message="Choose one or more Protocols to sniff out (use space to toggle selection)", choices=['ICMP', 'TCP', 'UDP'])]
+    protocols = inquirer.prompt(protocol_choices)['protocols']
+
+    protocol_map = {'ICMP': 1, 'TCP': 6, 'UDP': 17}
+
+    protocols = [protocol_map[x] for x in protocols]
+
+    if not len(protocols):
+        print("No selection was given, defaulting to ICMP")
+        protocols = [1]
+
+    packets = sniff(target['IP'], protocols)
     print("Stopping Main Thread")
     arp_thread.stop = True
     arp_thread.join()
+
+    if packets != None:
+        print("Dumping Frames to dogescan.dump...")
+        with open('dogescan.dump', 'wb') as f:
+            pickle.dump(packets, f)
+    
+    print(":boop:")
 
     
 if __name__=="__main__":

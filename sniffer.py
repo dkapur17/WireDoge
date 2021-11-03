@@ -1,6 +1,7 @@
 import socket
 import struct
 import textwrap
+import inquirer
 
 class EthernetFrame:
     def __init__(self, raw_data):
@@ -125,8 +126,13 @@ class UDPSegment(TransportSegment):
                 )
 
 def sniff(target_ip, protocols):
+
+    protocol_map = {1: 'ICMP', 6: 'TCP', 17: 'UDP'}
+    protocol_names = [protocol_map[x] for x in protocols]
+    protocol_names = ', '.join(protocol_names[:-2] + [' and '.join(protocol_names[-2:])]) 
+
     conn = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(3))
-    print(f"Doge is now sniffing for packets belonging to {target_ip}")
+    print(f"Doge is now sniffing for {protocol_names} segments packets belonging to {target_ip}")
     frames = []
     try:
         while True:
@@ -138,8 +144,9 @@ def sniff(target_ip, protocols):
                 frames.append(eth_frame)
     except KeyboardInterrupt:
         print("Finished Sniffing...")
-        res = input("Would you like to save the frames? y/[n]").lower()
-        return frames if res == 'y' else None
+        dump_choices = [inquirer.List('dump', message="Would you like to save the sniffed frames? ", choices=["No", "Yes"])]
+        dump = inquirer.prompt(dump_choices)['dump']
+        return frames if dump == 'Yes' else None
 
 def main():
     conn = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(3))
