@@ -153,4 +153,3 @@ def main():
 
 if __name__=="__main__":
     main()
-    # sniff('192.168.0.57', [6])
