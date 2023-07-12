@@ -1,6 +1,10 @@
 # WireDoge
-*Like WireShark, but Doge.*
+<div align="center">
+<img src="assets/Logo.png" width=300>
+</div>
 
+
+*Like WireShark, but Doge.*
 ![WireDoge](assets/WireDoge.png)
 
 WireDoge is a simple Man in the Middle Attack tool written in Python. 
